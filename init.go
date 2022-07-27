@@ -7,23 +7,24 @@ import (
 	"github.com/spf13/viper"
 )
 
+// 1. CONFIG_ROOT
+// 2. ${HOME}/.<app-name>
+// 3. /etc/<app-name>
 func init() {
 	viper.SetConfigType("yaml")
 
-	// load user define config root via CONFIG_ENV_NAME environment
-	if envName := os.Getenv("CONFIG_ENV_NAME"); envName != "" {
-		if envValue := os.Getenv(envName); envValue != "" {
-			viper.AddConfigPath(envValue)
-		}
-	}
-
-	// load CONFIG_ROOT
+	// 1. load CONFIG_ROOT
 	if configRoot := os.Getenv("CONFIG_ROOT"); configRoot != "" {
 		viper.AddConfigPath(configRoot)
 	}
 
-	// load from /etc/<app-name>
 	if appName := os.Getenv("CONFIG_APP_NAME"); appName != "" {
+		// 2. load from ${HOME}/.<app-name>
+		if homeDir, err := os.UserHomeDir(); err == nil && homeDir != "" {
+			viper.AddConfigPath(fmt.Sprintf("%v/.%v", homeDir, appName))
+		}
+
+		// 3. load from /etc/<app-name>
 		viper.AddConfigPath(fmt.Sprintf("/etc/%v", appName))
 	}
 
